@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Attributes\CollectionNameAttribute.cs" />
     <Compile Include="MongoDbContext.cs" />
+    <Compile Include="MongoDbSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
