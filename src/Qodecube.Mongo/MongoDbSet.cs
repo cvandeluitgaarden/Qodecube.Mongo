@@ -1,13 +1,15 @@
 ﻿namespace Qodecube.Mongo
 {
     using MongoDB.Driver;
+    using MongoDB.Driver.Linq;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Threading.Tasks;
 
-    public class MongoDbSet<T> : IQueryable<T>
+    public class MongoDbSet<T> : IQueryable<T>, IMongoDbSet<T>
     {
         private IMongoCollection<T> collection;
         private IQueryable<T> innerObject;
@@ -54,17 +56,52 @@
 
         public void Add(T entity)
         {
-            this.collection.InsertOneAsync(entity).Wait();
+            this.AddAsync(entity).Wait();
         }
 
-        public void Update(T entity)
+        public void Add(IEnumerable<T> entities)
         {
-            throw new NotImplementedException();
+            this.AddAsync(entities).Wait();
         }
 
-        public void Delete(T entity)
+        public async Task AddAsync(IEnumerable<T> entities)
         {
-            throw new NotImplementedException();
+            await this.collection.InsertManyAsync(entities);
+        }
+
+        public void Update(T entity, Expression<Func<T, bool>> expression)
+        {
+            this.UpdateAsync(entity, expression).Wait();
+        }
+
+        public void Delete(Expression<Func<T, bool>> expression)
+        {
+            this.DeleteAsync(expression).Wait();
+        }
+
+        public async Task AddAsync(T entity)
+        {
+            await this.collection.InsertOneAsync(entity);
+        }
+
+        public async Task UpdateAsync(T entity, Expression<Func<T, bool>> expression)
+        {
+            DebugExpression("Update", expression);
+            await this.collection.ReplaceOneAsync(expression, entity);
+        }
+
+        public async Task DeleteAsync(Expression<Func<T, bool>> expression)
+        {
+            DebugExpression("Delete", expression);
+            await this.collection.DeleteManyAsync(expression);
+        }
+
+        private void DebugExpression(string name, Expression<Func<T, bool>> expression)
+        {
+#if DEBUG
+
+            Console.WriteLine(name + ": " + ((IMongoQueryable)this.innerObject.Where(expression)).GetExecutionModel().ToString());
+#endif
         }
     }
 }
