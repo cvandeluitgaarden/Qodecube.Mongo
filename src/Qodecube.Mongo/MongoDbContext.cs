@@ -18,13 +18,20 @@
         private void InstantiateMongoCollections(IMongoDatabase database)
         {
             MethodInfo getCollectionMethod = database.GetType().GetMethod("GetCollection");
-            foreach(var collectionType in this.GetType().GetProperties()
-                .Where(prop => prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(IMongoCollection<>)))
+            foreach(var dbSetType in this.GetType().GetProperties()
+                .Where(prop => prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(MongoDbSet<>)))
             {
-                var arg = collectionType.PropertyType.GetGenericArguments()[0];
-                var value = getCollectionMethod.MakeGenericMethod(arg)?.Invoke(database, new object[] { GetCollectionName(collectionType), null });
-                collectionType.SetValue(this, value);
+                var argument = dbSetType.PropertyType.GetGenericArguments()[0];
+                var collection = getCollectionMethod.MakeGenericMethod(argument)?.Invoke(database, new object[] { GetCollectionName(dbSetType), null });
+                var dbSet = CreateMongoDbSet(collection, argument);
+                dbSetType.SetValue(this, dbSet);
             }
+        }
+
+        private object CreateMongoDbSet(object collection, Type type)
+        {
+            var mongoDbSetType = typeof(MongoDbSet<>).MakeGenericType(type);
+            return Activator.CreateInstance(mongoDbSetType, collection);
         }
 
         private string GetCollectionName(PropertyInfo collectionType)
