@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\CollectionNameAttribute.cs" />
+    <Compile Include="DynamicMongoDbContext.cs" />
     <Compile Include="IMongoAsyncDbSet.cs" />
     <Compile Include="IMongoDbSet.cs" />
     <Compile Include="IMongoManagement.cs" />

@@ -15,7 +15,7 @@
             InstantiateMongoCollections(new MongoClient(mongoUrl).GetDatabase(mongoUrl.DatabaseName));
         }
 
-        private void InstantiateMongoCollections(IMongoDatabase database)
+        internal virtual void InstantiateMongoCollections(IMongoDatabase database)
         {
             MethodInfo getCollectionMethod = database.GetType().GetMethod("GetCollection");
             foreach(var dbSetType in this.GetType().GetProperties()
