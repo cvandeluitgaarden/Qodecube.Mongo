@@ -6,7 +6,7 @@
     using System.Configuration;
     using System.Linq;
     using System.Reflection;
-
+    
     public abstract class MongoDbContext
     {
         public MongoDbContext(string nameOrConnectionstring)
@@ -19,13 +19,24 @@
         {
             MethodInfo getCollectionMethod = database.GetType().GetMethod("GetCollection");
             foreach(var dbSetType in this.GetType().GetProperties()
-                .Where(prop => prop.PropertyType.IsGenericType && prop.PropertyType.GetGenericTypeDefinition() == typeof(MongoDbSet<>)))
+                .Where(prop => prop.PropertyType.IsGenericType && 
+                IsValidTypeDefinition(prop.PropertyType.GetGenericTypeDefinition())))
             {
                 var argument = dbSetType.PropertyType.GetGenericArguments()[0];
                 var collection = getCollectionMethod.MakeGenericMethod(argument)?.Invoke(database, new object[] { GetCollectionName(dbSetType), null });
                 var dbSet = CreateMongoDbSet(collection, argument);
                 dbSetType.SetValue(this, dbSet);
             }
+        }
+
+        private bool IsValidTypeDefinition(Type type)
+        {
+            if(type == typeof(MongoDbSet<>))
+            {
+                return true;
+            }
+            var interfaces = typeof(MongoDbSet<>).GetInterfaces();
+            return interfaces.Where(x => x.ToString() == type.ToString()).Any();
         }
 
         private object CreateMongoDbSet(object collection, Type type)

@@ -9,7 +9,7 @@
     using System.Linq.Expressions;
     using System.Threading.Tasks;
 
-    public class MongoDbSet<T> : IQueryable<T>, IMongoDbSet<T>
+    public class MongoDbSet<T> : IQueryable<T>, IMongoDbSet<T>, IMongoAsyncDbSet<T>, IMongoManagement<T>
     {
         private IMongoCollection<T> collection;
         private IQueryable<T> innerObject;
@@ -94,6 +94,14 @@
         {
             DebugExpression("Delete", expression);
             await this.collection.DeleteManyAsync(expression);
+        }
+
+        public IMongoCollection<T> Collection
+        {
+            get
+            {
+                return this.collection;
+            }
         }
 
         private void DebugExpression(string name, Expression<Func<T, bool>> expression)
